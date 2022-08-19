@@ -5,13 +5,15 @@ module Duo
 		MINIMUM_STATE_LENGTH = 22
 		MAXIMUM_STATE_LENGTH = 1024
 
-		attr_reader :client_id, :client_secret, :host, :redirect_uri
+		attr_reader :client_id, :client_secret, :host, :redirect_uri, :use_duo_code_attribute
 
-		def initialize(client_id, client_secret, host, redirect_uri)
+		def initialize(client_id, client_secret, host, redirect_uri, optional_args = {})
 			@client_id = client_id
 			@client_secret = client_secret
 			@host = host
 			@redirect_uri = redirect_uri
+			@use_duo_code_attribute = optional_args.fetch(:use_duo_code_attribute) { true }
+
 		end
 
 		def api_host_uri
@@ -36,7 +38,7 @@ module Duo
 				state: state,
 				response_type: 'code',
 				duo_uname: username,
-				use_duo_code_attribute: true,
+				use_duo_code_attribute: use_duo_code_attribute,
 			}
 
 			req_jwt = JWT.encode(jwt_args, client_secret, 'HS512')

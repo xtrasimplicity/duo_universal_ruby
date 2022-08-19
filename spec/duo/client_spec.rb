@@ -24,10 +24,15 @@ RSpec.describe Duo::Client do
 			expect(subject.client_secret).to eq(client_secret)
 			expect(subject.host).to eq(host)
 			expect(subject.redirect_uri).to eq(redirect_uri)
+			expect(subject.use_duo_code_attribute).to eq(true)
 		end
 
 		it 'allows custom CA certificates to be provided'
-		it 'allows a flag to use `duo_code` instead of `code` for the `returned authorisation parameter`'
+		it 'allows a flag to use `duo_code` instead of `code` for the `returned authorisation parameter`' do
+			subject = Duo::Client.new(client_id, client_secret, host, redirect_uri, use_duo_code_attribute: false)
+
+			expect(subject.use_duo_code_attribute).to eq(false)
+		end
 	end
 
 	describe '#authorize_endpoint_uri' do
@@ -62,37 +67,76 @@ RSpec.describe Duo::Client do
 			end
 		end
 
-		it 'returns a valid authorisation uri' do
-			stubbed_time = Time.now
+		let(:stubbed_time) { Time.now }
+
+		before do
 			allow(Time).to receive(:now).and_return(stubbed_time)
+		end
 
-			jwt_args = {
-				scope: 'openid',
-				redirect_uri: redirect_uri,
-				client_id: client_id,
-				iss: client_id,
-				aud: subject.api_host_uri,
-				exp: (Time.now + (5*60)).to_i,
-				state: state,
-				response_type: 'code',
-				duo_uname: username,
-				use_duo_code_attribute: true
-			}
+		context 'when `use_duo_code_attribute` is not specified on client instantiation' do
+			it 'returns a valid authorisation uri' do
+				jwt_args = {
+					scope: 'openid',
+					redirect_uri: redirect_uri,
+					client_id: client_id,
+					iss: client_id,
+					aud: subject.api_host_uri,
+					exp: (Time.now + (5*60)).to_i,
+					state: state,
+					response_type: 'code',
+					duo_uname: username,
+					use_duo_code_attribute: true
+				}
+	
+				expected_args = {
+					response_type: 'code',
+					client_id: client_id,
+					request: JWT.encode(jwt_args, client_secret, 'HS512')
+				}
+	
+				encoded_expected_args = URI.encode_www_form expected_args
+	
+				expected_authorisation_url = "#{subject.authorize_endpoint_uri}?#{encoded_expected_args}"
+	
+				actual_authorisation_url = subject.create_auth_url(username, state)
+	
+	
+				expect(actual_authorisation_url).to eq(expected_authorisation_url)
+			end
+		end
 
-			expected_args = {
-				response_type: 'code',
-				client_id: client_id,
-				request: JWT.encode(jwt_args, client_secret, 'HS512')
-			}
+		context 'when `use_duo_code_attribute` is set to `false` on client instantiation' do
+			subject { Duo::Client.new(client_id, client_secret, host, redirect_uri, use_duo_code_attribute: false) }
 
-			encoded_expected_args = URI.encode_www_form expected_args
-
-			expected_authorisation_url = "#{subject.authorize_endpoint_uri}?#{encoded_expected_args}"
-
-			actual_authorisation_url = subject.create_auth_url(username, state)
-
-
-			expect(actual_authorisation_url).to eq(expected_authorisation_url)
+			it 'returns a valid authorisation uri' do
+				jwt_args = {
+					scope: 'openid',
+					redirect_uri: redirect_uri,
+					client_id: client_id,
+					iss: client_id,
+					aud: subject.api_host_uri,
+					exp: (Time.now + (5*60)).to_i,
+					state: state,
+					response_type: 'code',
+					duo_uname: username,
+					use_duo_code_attribute: false
+				}
+	
+				expected_args = {
+					response_type: 'code',
+					client_id: client_id,
+					request: JWT.encode(jwt_args, client_secret, 'HS512')
+				}
+	
+				encoded_expected_args = URI.encode_www_form expected_args
+	
+				expected_authorisation_url = "#{subject.authorize_endpoint_uri}?#{encoded_expected_args}"
+	
+				actual_authorisation_url = subject.create_auth_url(username, state)
+	
+	
+				expect(actual_authorisation_url).to eq(expected_authorisation_url)
+			end
 		end
 	end
 end
