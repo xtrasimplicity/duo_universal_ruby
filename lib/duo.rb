@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "duo/version"
+require_relative "duo/client"
 
 module Duo
   class Error < StandardError; end
-  # Your code goes here...
+  class StateLengthError < StandardError; end
+  class UsernameRequiredError < StandardError; end
 end

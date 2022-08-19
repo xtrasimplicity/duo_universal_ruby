@@ -1,18 +1,17 @@
 # Duo
+_A port of Duo's Universal Python SDK client to Ruby._
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/duo`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Python SDK: https://github.com/duosecurity/duo_universal_python
 
 ## Installation
 
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add duo
+    $ bundle add duo_universal
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install duo
+    $ gem install duo_universal
 
 ## Usage
 
