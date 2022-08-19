@@ -173,5 +173,18 @@ RSpec.describe Duo::Client do
 			end
 		end
 	end
+
+	describe '#generate_state' do
+		it 'generates a random alphanumeric string of the correct length' do
+			stubbed_state = SecureRandom.alphanumeric(Duo::Client::STATE_LENGTH)
+
+			expect(SecureRandom).to receive(:alphanumeric).with(Duo::Client::STATE_LENGTH).and_return(stubbed_state)
+
+			actual_state = subject.generate_state
+
+			expect(actual_state).to eq(stubbed_state)
+			expect(actual_state.length).to eq(Duo::Client::STATE_LENGTH)
+		end
+	end
 end
   

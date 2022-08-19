@@ -1,7 +1,9 @@
 require 'jwt'
+require 'securerandom'
 
 module Duo
 	class Client
+		STATE_LENGTH = 36
 		MINIMUM_STATE_LENGTH = 22
 		MAXIMUM_STATE_LENGTH = 1024
 		CLIENT_ID_LENGTH = 20
@@ -58,6 +60,10 @@ module Duo
 			query_string = URI.encode_www_form all_args
 
 			"#{authorize_endpoint_uri}?#{query_string}"
+		end
+
+		def generate_state
+			SecureRandom.alphanumeric(STATE_LENGTH)
 		end
 	end
 end
