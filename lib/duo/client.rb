@@ -7,7 +7,7 @@ module Duo
 		MINIMUM_STATE_LENGTH = 22
 		MAXIMUM_STATE_LENGTH = 1024
 		CLIENT_ID_LENGTH = 20
-		CLIENT_SECRET_LENGTH = 44
+		CLIENT_SECRET_LENGTH = 40
 
 		attr_reader :client_id, :client_secret, :host, :redirect_uri, :use_duo_code_attribute
 
