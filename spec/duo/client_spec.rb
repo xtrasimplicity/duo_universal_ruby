@@ -10,7 +10,7 @@ RSpec.describe Duo::Client do
 	include TestHelpers
 	
 	let(:client_id) { 'DIXXXXXXXXXXXXXXXXXX' }
-	let(:client_secret) { 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef' }
+	let(:client_secret) { generate_string_of_length(Duo::Client::CLIENT_SECRET_LENGTH) }
 	let(:host) { 'api-XXXXXXX.test.duosecurity.com' }
 	let(:redirect_uri) { 'https://www.example.com' }
 	let(:username) { 'user1' }
@@ -32,6 +32,40 @@ RSpec.describe Duo::Client do
 			subject = Duo::Client.new(client_id, client_secret, host, redirect_uri, use_duo_code_attribute: false)
 
 			expect(subject.use_duo_code_attribute).to eq(false)
+		end
+
+		describe 'validation' do
+			it 'requires the client ID to be present' do
+				expect { Duo::Client.new(nil, client_secret, host, redirect_uri) }.to raise_error(Duo::ClientIDLengthError)
+			end
+
+			it 'requires the client ID to be of the correct length' do
+				client_id_short = generate_string_of_length(Duo::Client::CLIENT_ID_LENGTH - 1)
+				client_id_long = generate_string_of_length(Duo::Client::CLIENT_ID_LENGTH + 1)
+				
+				expect { Duo::Client.new(client_id_short, client_secret, host, redirect_uri) }.to raise_error(Duo::ClientIDLengthError)
+				expect { Duo::Client.new(client_id_long, client_secret, host, redirect_uri) }.to raise_error(Duo::ClientIDLengthError)
+			end
+
+			it 'requires the client secret to be present' do
+				expect { Duo::Client.new(client_id, nil, host, redirect_uri) }.to raise_error(Duo::ClientSecretLengthError)
+			end
+
+			it 'requires the client secret to be of the correct length' do
+				client_secret_short = generate_string_of_length(Duo::Client::CLIENT_SECRET_LENGTH - 1)
+				client_secret_long = generate_string_of_length(Duo::Client::CLIENT_SECRET_LENGTH + 1)
+				
+				expect { Duo::Client.new(client_id, client_secret_short, host, redirect_uri) }.to raise_error(Duo::ClientSecretLengthError)
+				expect { Duo::Client.new(client_id, client_secret_long, host, redirect_uri) }.to raise_error(Duo::ClientSecretLengthError)
+			end
+
+			it 'requires the API host to be present' do
+				expect { Duo::Client.new(client_id, client_secret, nil, redirect_uri) }.to raise_error(Duo::ApiHostRequiredError)
+			end
+			
+			it 'requires the redirect URI to be present' do
+				expect { Duo::Client.new(client_id, client_secret, host, nil) }.to raise_error(Duo::RedirectUriRequiredError)
+			end
 		end
 	end
 

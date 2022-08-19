@@ -4,16 +4,22 @@ module Duo
 	class Client
 		MINIMUM_STATE_LENGTH = 22
 		MAXIMUM_STATE_LENGTH = 1024
+		CLIENT_ID_LENGTH = 20
+		CLIENT_SECRET_LENGTH = 44
 
 		attr_reader :client_id, :client_secret, :host, :redirect_uri, :use_duo_code_attribute
 
 		def initialize(client_id, client_secret, host, redirect_uri, optional_args = {})
+			raise Duo::ClientIDLengthError unless client_id && client_id.length == CLIENT_ID_LENGTH
+			raise Duo::ClientSecretLengthError unless client_secret && client_secret.length == CLIENT_SECRET_LENGTH
+			raise Duo::ApiHostRequiredError unless host
+			raise Duo::RedirectUriRequiredError unless redirect_uri
+
 			@client_id = client_id
 			@client_secret = client_secret
 			@host = host
 			@redirect_uri = redirect_uri
 			@use_duo_code_attribute = optional_args.fetch(:use_duo_code_attribute) { true }
-
 		end
 
 		def api_host_uri
