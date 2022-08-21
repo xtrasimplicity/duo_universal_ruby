@@ -10,6 +10,7 @@ RSpec.describe Duo::Client do
 	include TestHelpers
 	
 	let(:client_id) { 'DIXXXXXXXXXXXXXXXXXX' }
+	let(:wrong_client_id) { 'DIXXXXXXXXXXXXXXXXXY' }
 	let(:client_secret) { generate_string_of_length(Duo::Client::CLIENT_SECRET_LENGTH) }
 	let(:host) { 'api-XXXXXXX.test.duosecurity.com' }
 	let(:redirect_uri) { 'https://www.example.com' }
@@ -185,6 +186,43 @@ RSpec.describe Duo::Client do
 			expect(actual_state).to eq(stubbed_state)
 			expect(actual_state.length).to eq(Duo::Client::STATE_LENGTH)
 		end
+	end
+
+	describe '#health_check' do
+		let(:stubbed_time) { Time.now }
+
+		before do
+			allow(Time).to receive(:now).and_return(stubbed_time)
+		end
+
+		it 'handles timeout errors' do
+			expect(HTTParty).to receive(:post).with(any_args).and_raise(Net::OpenTimeout)
+			
+			expect { subject.health_check }.to raise_error(Net::OpenTimeout)
+		end
+
+		it 'handles when duo is not able to be contacted (e.g. network is down)'
+		
+		it 'handles bad client IDs' do
+			client_with_bad_id = Duo::Client.new(wrong_client_id, client_secret, host, redirect_uri)
+
+			expected_response_as_json = {
+				message: 'invalid_client',
+				code: 40002,
+				stat: 'FAIL',
+				message_detail: 'The provided client_assertion was invalid.',
+				timestamp: stubbed_time.to_i
+			}.to_json
+
+			stubbed_json_response = double(body: expected_response_as_json)
+
+			expect(HTTParty).to receive(:post).with(any_args).and_return(stubbed_json_response)
+
+			expect { subject.health_check }.to raise_error(Duo::Error)
+		end
+
+		it 'handles bad Duo Certificates'
+		it 'handles when everything is successful'
 	end
 end
   

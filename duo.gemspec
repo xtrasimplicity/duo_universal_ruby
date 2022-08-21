@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "jwt"
+  spec.add_dependency "httparty"
   
   spec.add_development_dependency "byebug"
 

@@ -1,9 +1,13 @@
 require 'jwt'
 require 'securerandom'
+require 'httparty'
+
+require 'byebug'
 
 module Duo
 	class Client
 		STATE_LENGTH = 36
+		JTI_LENGTH = 36
 		MINIMUM_STATE_LENGTH = 22
 		MAXIMUM_STATE_LENGTH = 1024
 		CLIENT_ID_LENGTH = 20
@@ -30,6 +34,10 @@ module Duo
 
 		def authorize_endpoint_uri
 			"https://#{host}/oauth/v1/authorize"
+		end
+
+		def health_check_endpoint_uri
+			"https://#{host}/oauth/v1/health_check"
 		end
 
 		def create_auth_url(username, state)
@@ -64,6 +72,43 @@ module Duo
 
 		def generate_state
 			SecureRandom.alphanumeric(STATE_LENGTH)
+		end
+
+		# Checks whether Duo is available.
+		# Returns:
+		#  {'response': {'timestamp': <int:unix timestamp>}, 'stat': 'OK'}
+		# Raises:
+		# 
+		def health_check
+			req_payload = {
+				client_assertion: JWT.encode(jwt_args_for(health_check_endpoint_uri), client_secret, 'HS512'),
+				client_id: client_id
+			}
+
+			# ToDo: Add Support for verifying SSL certificates
+			begin
+				res = HTTParty.post(health_check_endpoint_uri, body: req_payload)
+
+				json_resp = JSON.parse res.body
+
+				raise Duo::Error.new(json_resp) unless json_resp[:stat] == 'OK'
+
+				json_resp
+			rescue => e
+				raise e
+			end
+		end
+
+		private
+
+		def jwt_args_for(endpoint_uri)
+			{
+				iss: client_id,
+				sub: client_id,
+				aud: endpoint_uri,
+				exp: (Time.now + (5*60)).to_i,
+				jti: SecureRandom.alphanumeric(JTI_LENGTH)
+			}
 		end
 	end
 end

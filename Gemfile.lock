@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     duo_universal (0.1.0)
+      httparty
       jwt
 
 GEM
@@ -10,7 +11,14 @@ GEM
     ast (2.4.2)
     byebug (11.1.3)
     diff-lcs (1.5.0)
+    httparty (0.20.0)
+      mime-types (~> 3.0)
+      multi_xml (>= 0.5.2)
     jwt (2.4.1)
+    mime-types (3.4.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2022.0105)
+    multi_xml (0.6.0)
     parallel (1.21.0)
     parser (3.1.1.0)
       ast (~> 2.4.1)
