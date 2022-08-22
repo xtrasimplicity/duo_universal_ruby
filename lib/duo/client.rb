@@ -91,7 +91,7 @@ module Duo
 
 				json_resp = JSON.parse res.body
 
-				raise Duo::Error.new(json_resp) unless json_resp[:stat] == 'OK'
+				raise Duo::Error.new(json_resp) unless json_resp['stat'] == 'OK'
 
 				json_resp
 			rescue => e

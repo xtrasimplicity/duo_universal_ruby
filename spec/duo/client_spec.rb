@@ -222,7 +222,39 @@ RSpec.describe Duo::Client do
 		end
 
 		it 'handles bad Duo Certificates'
-		it 'handles when everything is successful'
+
+		it 'handles when everything is successful' do
+			stubbed_JTI_value = SecureRandom.alphanumeric(Duo::Client::JTI_LENGTH)
+
+			expect(SecureRandom).to receive(:alphanumeric).with(Duo::Client::JTI_LENGTH).and_return(stubbed_JTI_value)
+
+			expected_request_payload = {
+				client_assertion: JWT.encode({
+					iss: client_id,
+					sub: client_id,
+					aud: subject.health_check_endpoint_uri,
+					exp: (stubbed_time + 300).to_i,
+					jti: stubbed_JTI_value
+					},
+					client_secret,
+					'HS512'
+				),
+				client_id: client_id,
+			}
+
+			expected_json_response = {
+				response: {
+					timestamp: stubbed_time.to_i,
+				},
+				stat: 'OK'
+			}.to_json
+
+			expect(HTTParty).to receive(:post).with(subject.health_check_endpoint_uri, body: expected_request_payload).and_return(
+				double(body: expected_json_response)
+			)
+
+			expect(subject.health_check).to eq(JSON.parse(expected_json_response))
+		end
 	end
 end
   
