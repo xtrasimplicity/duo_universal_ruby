@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "lib/duo/version"
+require_relative "lib/duo_universal/version"
 
 Gem::Specification.new do |spec|
   spec.name = "duo_universal"
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features)/|\.(?:git|travis|circleci)|appveyor)})
+      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features|demo)/|\.(?:git|travis|circleci)|appveyor)})
     end
   end
   spec.bindir = "exe"

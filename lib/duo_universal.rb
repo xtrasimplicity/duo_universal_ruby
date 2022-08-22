@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "duo/version"
-require_relative "duo/client"
+require_relative "duo_universal/version"
+require_relative "duo_universal/client"
 
 module Duo
 	class Error < StandardError; end
