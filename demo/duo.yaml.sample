@@ -1,0 +1,5 @@
+---
+client_id: DIXXXXXXXXXXXXXXXXX
+client_secret: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+api_host: api-XXXXXXX.test.duosecurity.com
+redirect_uri: http://localhost:4567/duo-cb
