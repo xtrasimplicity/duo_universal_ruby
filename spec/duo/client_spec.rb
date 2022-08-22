@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module TestHelpers
-	def generate_string_of_length(length)
+  def generate_string_of_length(length)
 		length.times.map { "z" }.join
-	end
+  end
 end
 
 RSpec.describe Duo::Client do
