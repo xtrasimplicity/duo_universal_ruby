@@ -15,7 +15,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
-TODO: Write usage instructions here
+See the Sinatra-based demo app found in the `demo` folder, for an example of how to integrate this gem into your project.
 
 ## Development
 
