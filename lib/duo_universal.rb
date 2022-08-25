@@ -11,4 +11,5 @@ module Duo
   class ClientSecretLengthError < StandardError; end
   class ApiHostRequiredError < StandardError; end
   class RedirectUriRequiredError < StandardError; end
+  class DuoCodeRequiredError < StandardError; end
 end

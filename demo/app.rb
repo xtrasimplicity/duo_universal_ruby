@@ -54,8 +54,8 @@ get '/duo-cb' do
     erb :index
   end
 
-  # ToDo: Fetch token using Duo code.
-  raise NotImplementedError
+  decoded_token = @@duo_client.exchange_authorization_code_for_2fa_result(code, session[:username])
+
 
   @message = "Success!"
   erb :index

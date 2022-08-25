@@ -12,6 +12,8 @@ module Duo
     MAXIMUM_STATE_LENGTH = 1024
     CLIENT_ID_LENGTH = 20
     CLIENT_SECRET_LENGTH = 40
+    CLIENT_ASSERTION_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+    JWT_LEEWAY = 60
 
     attr_reader :client_id, :client_secret, :host, :redirect_uri, :use_duo_code_attribute
 
@@ -38,6 +40,10 @@ module Duo
 
     def health_check_endpoint_uri
       "https://#{host}/oauth/v1/health_check"
+    end
+
+    def token_endpoint_uri
+      "https://#{host}/oauth/v1/token"
     end
 
     def create_auth_url(username, state)
@@ -96,6 +102,62 @@ module Duo
         json_resp
       rescue => e
         raise e
+      end
+    end
+
+    # Exchanges the duo_code for a token with Duo to determine
+    # if the auth was successful.
+    #	Argument:
+    #		duo_code      -- Authentication session transaction id
+    #										 returned by Duo
+    #		username      -- Name of the user authenticating with Duo
+    # 	nonce         -- Random 36B string used to associate
+    #										 a session with an ID token
+    #	Returns:
+    #		A token with meta-data about the auth
+    #	Raises:
+    #		Duo::Error on error for invalid duo_codes, invalid credentials,
+    #		or problems connecting to Duo
+    def exchange_authorization_code_for_2fa_result(duo_code, username, nonce = nil)
+      raise Duo::DuoCodeRequiredError unless duo_code
+
+      jwt_args = jwt_args_for(token_endpoint_uri)
+
+      all_args = {
+        grant_type: 'authorization_code',
+        code: duo_code,
+        redirect_uri: redirect_uri,
+        client_id: client_id,
+        client_assertion_type: CLIENT_ASSERTION_TYPE,
+        client_assertion: JWT.encode(jwt_args, client_secret, 'HS512')
+      }
+
+      begin
+        user_agent = "duo_universal_ruby/#{Duo::VERSION} ruby/#{RUBY_VERSION}-p#{RUBY_PATCHLEVEL} #{RUBY_PLATFORM}"
+
+        resp = HTTParty.post(token_endpoint_uri, body: all_args, headers: { user_agent: user_agent })
+
+        json_response_body = JSON.parse(resp.body)
+
+        raise Duo::Error.new(json_response_body) unless resp.code == 200
+
+        decoded_token = JWT.decode(json_response_body['id_token'], client_secret, true, { 
+          algorithm: 'HS512', 
+          iss: token_endpoint_uri, 
+          verify_iss: true,  
+          aud: client_id,
+          verify_aud: true,
+          exp_leeway: JWT_LEEWAY,
+          required_claims: ['exp', 'iat'],
+          verify_iat: true
+        }).first
+
+        raise Duo::Error.new("The username is invalid.") unless decoded_token.has_key?('preferred_username') and decoded_token['preferred_username'] == username
+        raise Duo::Error.new("The nonce is invalid.") unless decoded_token.has_key?('nonce') and decoded_token['nonce'] == nonce  
+
+        decoded_token
+      rescue => e
+        raise Duo::Error.new(e.message)
       end
     end
 
