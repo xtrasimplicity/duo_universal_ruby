@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    duo_universal (0.1.0)
+    duo_universal (0.1.2.pre)
       httparty
       jwt
 
@@ -64,4 +64,4 @@ DEPENDENCIES
   rubocop (~> 1.21)
 
 BUNDLED WITH
-   2.3.11
+   2.3.20
