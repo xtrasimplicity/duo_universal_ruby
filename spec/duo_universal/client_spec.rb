@@ -489,5 +489,17 @@ RSpec.describe Duo::Client do
 
       expect { subject.exchange_authorization_code_for_2fa_result(duo_code, username, nonce) }.to raise_error(Duo::Error)
     end
+
+    it 'allows the JWT decode options to be configured' do
+      inject_value_into_jwt! decoded_jwt, :nonce, nonce
+      id_token = build_id_token_from_jwt_payload decoded_jwt, client_secret
+      stub_token_exchange_http_response(id_token)
+
+      opts = { opt_name: 'this is a random value' }
+      
+      expect(JWT).to receive(:decode).with(any_args, client_secret, true, hash_including(opts)).and_call_original
+
+      subject.exchange_authorization_code_for_2fa_result(duo_code, username, nonce, jwt_decode_options: opts)
+    end
   end
 end

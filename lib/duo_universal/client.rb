@@ -118,12 +118,13 @@ module Duo
     #		username      -- Name of the user authenticating with Duo
     # 	nonce         -- Random 36B string used to associate
     #										 a session with an ID token
+    #   jwt_decode_options  -- A hash of config options to use when decoding the JWT response.
     #	Returns:
     #		A token with meta-data about the auth
     #	Raises:
     #		Duo::Error on error for invalid duo_codes, invalid credentials,
     #		or problems connecting to Duo
-    def exchange_authorization_code_for_2fa_result(duo_code, username, nonce = nil)
+    def exchange_authorization_code_for_2fa_result(duo_code, username, nonce = nil, jwt_decode_options: {})
       raise Duo::DuoCodeRequiredError unless duo_code
 
       jwt_args = jwt_args_for(token_endpoint_uri)
@@ -157,7 +158,7 @@ module Duo
           exp_leeway: JWT_LEEWAY,
           required_claims: ['exp', 'iat'],
           verify_iat: true
-        }).first
+      }.merge(jwt_decode_options)).first
 
         write_debug_message "Duo - decoded token: #{decoded_token.inspect}"
         write_debug_message "Duo - nonce: #{nonce}"
