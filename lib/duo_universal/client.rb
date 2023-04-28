@@ -28,6 +28,7 @@ module Duo
       @host = host
       @redirect_uri = redirect_uri
       @use_duo_code_attribute = optional_args.fetch(:use_duo_code_attribute) { true }
+      @debug_mode = optional_args.fetch(:debug_mode) { false }
     end
 
     def api_host_uri
@@ -105,6 +106,10 @@ module Duo
       end
     end
 
+    def debug_mode?
+      !!@debug_mode
+    end
+
     # Exchanges the duo_code for a token with Duo to determine
     # if the auth was successful.
     #	Argument:
@@ -141,6 +146,8 @@ module Duo
 
         raise Duo::Error.new(json_response_body) unless resp.code == 200
 
+        write_debug_message "Duo - response body: #{json_response_body['id_token']}"
+
         decoded_token = JWT.decode(json_response_body['id_token'], client_secret, true, { 
           algorithm: 'HS512', 
           iss: token_endpoint_uri, 
@@ -152,8 +159,11 @@ module Duo
           verify_iat: true
         }).first
 
+        write_debug_message "Duo - decoded token: #{decoded_token.inspect}"
+        write_debug_message "Duo - nonce: #{nonce}"
+
         raise Duo::Error.new("The username is invalid.") unless decoded_token.has_key?('preferred_username') and decoded_token['preferred_username'] == username
-        raise Duo::Error.new("The nonce is invalid.") unless decoded_token.has_key?('nonce') and decoded_token['nonce'] == nonce  
+        raise Duo::Error.new("The nonce is invalid.") unless nonce.nil? or (decoded_token.has_key?('nonce') and decoded_token['nonce'] == nonce) 
 
         decoded_token
       rescue => e
@@ -171,6 +181,12 @@ module Duo
         exp: (Time.now + (5*60)).to_i,
         jti: SecureRandom.alphanumeric(JTI_LENGTH)
       }
+    end
+
+    def write_debug_message(message)
+      return unless debug_mode?
+
+      puts "DEBUG: #{message}"
     end
   end
 end
